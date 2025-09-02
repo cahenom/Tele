@@ -5,37 +5,46 @@ const API = `https://api.telegram.org/bot${TOKEN}`;
 
 export default async function handler(req, res) {
   try {
-    if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-    const body = req.body;
-
-    if (!body || !body.message) return res.status(200).json({ ok: true });
-
-    const chatId = body.message.chat.id;
-    const text = body.message.text;
-
-    // Cek command /start
-    if (text === "/start") {
-      await fetch(`${API}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: "Selamat datang! Pilih menu di bawah:",
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "Website", url: "https://example.com" }],
-              [{ text: "Hubungi Admin", url: "https://t.me/username_admin" }],
-              [{ text: "Callback", callback_data: "klik_callback" }]
-            ]
-          }
-        })
-      });
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method Not Allowed" });
     }
 
-    // Cek tombol callback
+    const body = req.body;
+    console.log("Update masuk:", JSON.stringify(body, null, 2)); // Debug log
+
+    // Handle pesan biasa
+    if (body.message) {
+      const chatId = body.message.chat.id;
+      const text = body.message.text;
+
+      if (text === "/start") {
+        await fetch(`${API}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: "Selamat datang! Pilih menu di bawah:",
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: "🌐 Website", url: "https://example.com" }],
+                [{ text: "📞 Hubungi Admin", url: "https://t.me/username_admin" }],
+                [{ text: "🔘 Callback", callback_data: "klik_callback" }]
+              ]
+            }
+          })
+        });
+      }
+    }
+
+    // Handle tombol callback
     if (body.callback_query) {
       const callbackId = body.callback_query.id;
+      const chatId = body.callback_query.message.chat.id;
+      const data = body.callback_query.data;
+
+      console.log("Callback data:", data);
+
+      // Popup notifikasi
       await fetch(`${API}/answerCallbackQuery`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,12 +53,21 @@ export default async function handler(req, res) {
           text: "Kamu menekan tombol!"
         })
       });
+
+      // Kirim pesan baru ke chat
+      await fetch(`${API}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `Oke, tombol callback ditekan 🚀 (data: ${data})`
+        })
+      });
     }
 
     return res.status(200).json({ ok: true });
-
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error di handler:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 }

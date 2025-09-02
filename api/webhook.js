@@ -1,6 +1,4 @@
-import fetch from "node-fetch";
-
-const TOKEN = "7269081246:AAFz1d16iIu8nkIB-hgVA49OPXoZA9R0N-0"; // Ganti token bot kamu
+const TOKEN = "7269081246:AAFz1d16iIu8nkIB-hgVA49OPXoZA9R0N-0";
 const API = `https://api.telegram.org/bot${TOKEN}`;
 
 export default async function handler(req, res) {
@@ -10,7 +8,7 @@ export default async function handler(req, res) {
     }
 
     const body = req.body;
-    console.log("Update masuk:", JSON.stringify(body, null, 2)); // Debug log
+    console.log("Update masuk:", JSON.stringify(body, null, 2));
 
     // Handle pesan biasa
     if (body.message) {
@@ -44,7 +42,6 @@ export default async function handler(req, res) {
 
       console.log("Callback data:", data);
 
-      // Popup notifikasi
       await fetch(`${API}/answerCallbackQuery`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,7 +51,6 @@ export default async function handler(req, res) {
         })
       });
 
-      // Kirim pesan baru ke chat
       await fetch(`${API}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
